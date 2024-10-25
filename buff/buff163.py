@@ -5,8 +5,9 @@ import traceback
 import urllib.request as request
 
 import bs4 as bs
+from logs.logger_setup import get_logger
 
-# header = {"Accept-Language": "en-US,en;q=0.9"}
+logger = get_logger()
 
 
 def get_item_buff_price(item_id: int) -> float:
@@ -23,7 +24,7 @@ def get_item_buff_price(item_id: int) -> float:
         del header, req, source, soup, l_layout_bs
         return price / exchange_rate
     except:
-        print('failed in: https://buff.163.com/goods/{}?from=market#tab=selling'.format(item_id))
+        logger.warning('failed in: https://buff.163.com/goods/{}?from=market#tab=selling'.format(item_id))
         traceback.print_exc()
     finally:
         gc.collect()

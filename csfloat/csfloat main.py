@@ -8,6 +8,7 @@ import pygsheets
 import requests
 
 import buff.buff163 as buff163
+from logs.logger_setup import get_logger
 
 with open("../config.json", "r") as file:
     config = json.load(file)
@@ -36,6 +37,7 @@ COOKIES = {
 json_file = pygsheets.authorize(
     service_file=google_sheets_path)
 
+logger = get_logger()
 
 with open("../buff_ids.json", "r", encoding='utf-8') as file:
     buff_ids_config = json.load(file)
@@ -49,7 +51,7 @@ def get_item_details(listing):
 
     item_id = buff_ids_config["items"].get(item_name, {}).get("buff163_goods_id")
     if item_id is None:
-        print("item id {} not found for item: {}".format(item_id, item_name))
+        logger.warning("item id {} not found for item: {}".format(item_id, item_name))
         return item_name, None, None, None
     # if item is a skin, it will have a float. Other items such as stickers dont have such property
     try:
@@ -59,7 +61,7 @@ def get_item_details(listing):
     price = listing["price"] / 100
     buff_price = buff163.get_item_buff_price(item_id)
     if buff_price is None:
-        print("received None buff request for item: " + item_name)
+        logger.warning("received None buff request for item: " + item_name)
     else:
         # print("csgofloat price is: " + str(price), " buff price is: " + str(buff_price))
         pass
@@ -73,7 +75,7 @@ def write_to_google_sheets(listing):
     try:
         item_name, item_float, price, buff_price = get_item_details(listing)
         if buff_price is None:
-            print("item name for non buff price is " + item_name)
+            logger.warning("item name for non buff price is " + item_name)
             return
         if buff_price * buff_price_percentage >= price:
             # open the google spreadsheet (where 'PY to Gsheet Test' is the name of my sheet)
@@ -85,7 +87,7 @@ def write_to_google_sheets(listing):
             current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
             wks.update_row(sheet_row_index, [item_name, item_float, price, price / buff_price, current_time])
             sheet_row_index += 1
-            print("wrote item: {} to google sheets".format(item_name))
+            logger.info("wrote item: {} to google sheets".format(item_name))
             del sh, wks, current_time
     except:
         traceback.print_exc()
@@ -100,12 +102,12 @@ def look_for_discounts(page):
             output = requests.get(
                 'https://csfloat.com/api/v1/listings?sort_by=most_recent&min_price=10000&page=%d' % page,
                 cookies=COOKIES)
-            print('https://csfloat.com/api/v1/listings?sort_by=most_recent&min_price=10000&page=%d' % page)
+            logger.info('https://csfloat.com/api/v1/listings?sort_by=most_recent&min_price=10000&page=%d' % page)
             my_json = output.json()
             ratelimit_remaining = output.headers["x-ratelimit-remaining"]
-            print(output.status_code)
+            logger.info(output.status_code)
             if int(ratelimit_remaining) < priority_pages:
-                print(int(output.headers["x-ratelimit-reset"]) - int(time.time()))
+                logger.info(int(output.headers["x-ratelimit-reset"]) - int(time.time()))
                 time.sleep(int(output.headers["x-ratelimit-reset"]) - int(time.time()))
 
             # candidate_list = []
@@ -116,7 +118,7 @@ def look_for_discounts(page):
                         break
                     elif listing["code"] == 4:  # request page number is too high
                         max_pages = page
-                        print("max pages is: ", max_pages)
+                        logger.info("max pages is: ", max_pages)
 
                 price = listing["price"]
                 item = listing["item"]
