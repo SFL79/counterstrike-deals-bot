@@ -1,7 +1,6 @@
 import datetime
 import gc
 import json
-import sqlite3
 import threading
 import time
 import traceback
@@ -31,18 +30,15 @@ minimum_price = config["pricing"]["minimumPrice"]
 COOKIES = {
     'session': cookies_path
 }
-conn = sqlite3.connect(skins_db_path, check_same_thread=False)
-cur = conn.cursor()
 
-
-INSERT_COMMAND = "INSERT INTO CSGO_ITEMS (item_name, item_wear, item_float, total_price, discount)" \
-                 " VALUES ('{}', '{}', {}, {}, {})"
-COMPARE_BUFF_TO_CSFLOAT_COMMAND = "SELECT itemId FROM BUFF163_full_version WHERE itemName == '{}'"
 
 '''google sheets related variables'''
 json_file = pygsheets.authorize(
     service_file=google_sheets_path)
 
+
+with open("../buff_ids.json", "r", encoding='utf-8') as file:
+    buff_ids_config = json.load(file)
 
 def get_item_details(listing):
     item_info = listing["item"]
@@ -50,13 +46,9 @@ def get_item_details(listing):
     if item_name[:-1] == " ":
         item_name = item_name[:-1]
     item_name = item_name.replace("'", "''")
-    cur.execute(COMPARE_BUFF_TO_CSFLOAT_COMMAND.format(item_name))
-    item_id = cur.fetchall()
-    if len(item_id) > 0:
-        if item_id[0][0] is []:
-            print(item_id)
-        item_id = item_id[0][0]
-    else:
+
+    item_id = buff_ids_config["items"].get(item_name, {}).get("buff163_goods_id")
+    if item_id is None:
         print("item id {} not found for item: {}".format(item_id, item_name))
         return item_name, None, None, None
     # if item is a skin, it will have a float. Other items such as stickers dont have such property
@@ -95,7 +87,6 @@ def write_to_google_sheets(listing):
             sheet_row_index += 1
             print("wrote item: {} to google sheets".format(item_name))
             del sh, wks, current_time
-            print(COMPARE_BUFF_TO_CSFLOAT_COMMAND.format(item_name))
     except:
         traceback.print_exc()
     finally:

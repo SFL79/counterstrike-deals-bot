@@ -1,25 +1,15 @@
 import gc
 import json
 import re
-import sqlite3
 import traceback
 import urllib.request as request
 
 import bs4 as bs
 
-with open("../config.json", "r") as file:
-    config = json.load(file)
-
-skins_db_path = config["database"]["skinsDbPath"]
-
-conn = sqlite3.connect(skins_db_path, check_same_thread=False)
-cur = conn.cursor()
-INSERT_COMMAND = "INSERT INTO BUFF163_SKINS (itemId, itemName, itemWear, game)" \
-                 " VALUES ({}, '{}', '{}', '{}')"
-header = {"Accept-Language": "en-US,en;q=0.9"}
+# header = {"Accept-Language": "en-US,en;q=0.9"}
 
 
-def get_item_buff_price(item_id):
+def get_item_buff_price(item_id: int) -> float:
     try:
         header = {"Accept-Language": "en-US,en;q=0.9"}
         req = request.Request('https://buff.163.com/goods/{}?from=market#tab=selling'.format(item_id), headers=header)
@@ -28,7 +18,8 @@ def get_item_buff_price(item_id):
         exchange_rate = get_exchange_rate(soup)
         l_layout_bs = soup.find('div', attrs={'class': 'market-list'}).find('div', attrs={'class': 'l_Layout'})
         price = float(l_layout_bs.find(
-            'div', attrs={'class': 'detail-summ'}).prettify().split('data-goods-sell-min-price="')[1].split('"')[0]) / 100
+            'div', attrs={'class': 'detail-summ'}).prettify().split('data-goods-sell-min-price="')[1].split('"')[
+                          0]) / 100
         del header, req, source, soup, l_layout_bs
         return price / exchange_rate
     except:
@@ -37,9 +28,8 @@ def get_item_buff_price(item_id):
     finally:
         gc.collect()
 
-def get_exchange_rate(soup : bs.BeautifulSoup) -> float:
-    # return float(float(
-    #         soup.find('script', attrs={'type': 'text/javascript'}).prettify().split('"rate_base_usd": ')[1].split(",")[0]))
+
+def get_exchange_rate(soup: bs.BeautifulSoup) -> float:
     # Find the <script> tag that contains the 'rate_base_usd'
     script_tag = soup.find('script', text=re.compile('rate_base_usd'))
 
