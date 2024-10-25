@@ -1,11 +1,10 @@
 import datetime
-import gc
 import json
 import threading
 import time
-import traceback
 import pygsheets
 import requests
+import schedule
 
 import buff.buff163 as buff163
 from logs.logger_setup import get_logger
@@ -32,41 +31,35 @@ COOKIES = {
     'session': cookies_path
 }
 
-
 '''google sheets related variables'''
 json_file = pygsheets.authorize(
     service_file=google_sheets_path)
 
-logger = get_logger()
-
 with open("../buff_ids.json", "r", encoding='utf-8') as file:
     buff_ids_config = json.load(file)
+
+logger = get_logger()
+
 
 def get_item_details(listing):
     item_info = listing["item"]
     item_name = item_info["market_hash_name"]
     if item_name[:-1] == " ":
         item_name = item_name[:-1]
-    item_name = item_name.replace("'", "''")
+    # item_name = item_name.replace("'", "''")
 
     item_id = buff_ids_config["items"].get(item_name, {}).get("buff163_goods_id")
     if item_id is None:
         logger.warning("item id {} not found for item: {}".format(item_id, item_name))
         return item_name, None, None, None
     # if item is a skin, it will have a float. Other items such as stickers dont have such property
-    try:
-        item_float = item_info["float_value"]
-    except:
-        item_float = None
+    item_float = item_info.get("float_value")
+    if item_float is None:
+        item_float = -1
     price = listing["price"] / 100
     buff_price = buff163.get_item_buff_price(item_id)
     if buff_price is None:
         logger.warning("received None buff request for item: " + item_name)
-    else:
-        # print("csgofloat price is: " + str(price), " buff price is: " + str(buff_price))
-        pass
-    del item_info
-    gc.collect()
     return item_name, item_float, price, buff_price
 
 
@@ -88,16 +81,19 @@ def write_to_google_sheets(listing):
             wks.update_row(sheet_row_index, [item_name, item_float, price, price / buff_price, current_time])
             sheet_row_index += 1
             logger.info("wrote item: {} to google sheets".format(item_name))
-            del sh, wks, current_time
-    except:
-        traceback.print_exc()
+    except Exception as e:
+        logger.error(e)
     finally:
         time.sleep(2)
 
 
+items_checked = 0
+
+
 def look_for_discounts(page):
     global max_pages
-    while (True):
+    global items_checked
+    while True:
         try:
             output = requests.get(
                 'https://csfloat.com/api/v1/listings?sort_by=most_recent&min_price=10000&page=%d' % page,
@@ -124,14 +120,13 @@ def look_for_discounts(page):
                 item = listing["item"]
                 if price / 100 > minimum_price:
                     write_to_google_sheets(listing)
-                    time.sleep(0.5)
-        except:
-            traceback.print_exc()
+                    items_checked += 1
+                    time.sleep(0.3)
+        except Exception as e:
+            logger.error(e)
         finally:
-            del output, my_json, ratelimit_remaining, listing
-            gc.collect()
             page = get_next_page(page)
-            time.sleep(5)
+            time.sleep(3)
 
 
 def get_next_page(page_num):
@@ -144,11 +139,21 @@ def get_next_page(page_num):
     return page_num
 
 
+def log_items_checked():
+    logger.info(f"Checked {items_checked} items so far")
+
+
 def main():
+    schedule.every(30).seconds.do(log_items_checked)
+
     for i in range(1, 4):
         t1 = threading.Thread(target=look_for_discounts, args=(i,))
         t1.start()
         time.sleep(i)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 if __name__ == "__main__":

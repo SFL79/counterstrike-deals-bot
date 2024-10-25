@@ -1,8 +1,8 @@
-import gc
 import json
 import re
-import traceback
+import time
 import urllib.request as request
+from urllib.error import HTTPError
 
 import bs4 as bs
 from logs.logger_setup import get_logger
@@ -12,23 +12,44 @@ logger = get_logger()
 
 def get_item_buff_price(item_id: int) -> float:
     try:
-        header = {"Accept-Language": "en-US,en;q=0.9"}
-        req = request.Request('https://buff.163.com/goods/{}?from=market#tab=selling'.format(item_id), headers=header)
-        source = request.urlopen(req).read()
-        soup = bs.BeautifulSoup(source, 'lxml')
-        exchange_rate = get_exchange_rate(soup)
-        l_layout_bs = soup.find('div', attrs={'class': 'market-list'}).find('div', attrs={'class': 'l_Layout'})
-        price = float(l_layout_bs.find(
-            'div', attrs={'class': 'detail-summ'}).prettify().split('data-goods-sell-min-price="')[1].split('"')[
-                          0]) / 100
-        del header, req, source, soup, l_layout_bs
-        return price / exchange_rate
-    except:
+        request_url = 'https://buff.163.com/goods/{}?from=market#tab=selling'.format(item_id)
+        source = send_request(request_url)
+        if source is not None:
+            soup = bs.BeautifulSoup(source, 'lxml')
+            exchange_rate = get_exchange_rate(soup)
+            l_layout_bs = soup.find('div', attrs={'class': 'market-list'}).find('div', attrs={'class': 'l_Layout'})
+            price = float(l_layout_bs.find(
+                'div', attrs={'class': 'detail-summ'}).prettify().split('data-goods-sell-min-price="')[1].split('"')[
+                              0]) / 100
+            return price / exchange_rate
+    except Exception as e:
         logger.warning('failed in: https://buff.163.com/goods/{}?from=market#tab=selling'.format(item_id))
-        traceback.print_exc()
-    finally:
-        gc.collect()
+        logger.error(e)
 
+
+def send_request(request_url: str):
+    header = {"Accept-Language": "en-US,en;q=0.9"}
+    max_retries = 3  # Maximum number of retries
+    retries = 0
+    while retries < max_retries:
+        try:
+            # Prepare the request
+            req = request.Request(request_url, headers=header)
+            # Send the request
+            source = request.urlopen(req).read()
+            return source  # Return the fetched data if successful
+
+        except HTTPError as e:
+            # Check for specific status code 429
+            if e.code == 429:
+                logger.warning(f"Error 429: Too Many Requests for {request_url}. Retrying...")
+                time.sleep(2)  # Wait before retrying
+                retries += 1
+            else:
+                logger.error(f"HTTP error occurred: {e.code} for {request_url}.")
+                break  # Exit the loop for other HTTP errors
+
+    return None  # Return None or handle it as needed
 
 def get_exchange_rate(soup: bs.BeautifulSoup) -> float:
     # Find the <script> tag that contains the 'rate_base_usd'
