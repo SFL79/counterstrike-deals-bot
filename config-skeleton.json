@@ -1,0 +1,22 @@
+{
+    "session": {
+        "cookies": "SECRET"
+    },
+    "googleSheets": {
+        "configPath": "SECRET",
+        "sheetName": "SECRET",
+        "sheet_row_index": 2
+    },
+    "database": {
+        "skinsDbPath": "SECRET"
+    },
+    "csfloat": {
+        "apiKey": "SECRET",
+        "priorityPages": 10,
+        "maxPages": 60
+    },
+    "pricing": {
+        "buffPricePercentage": 1.00,
+        "minimumPrice": 1.00
+    }
+}
