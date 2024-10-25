@@ -45,6 +45,8 @@ Thumbs.db
 *.db
 *.dat
 *.pkl
+buff/buffids.txt
+init db.py
 
 # Testing and coverage
 htmlcov/
