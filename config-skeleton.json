@@ -13,11 +13,12 @@
     "csfloat": {
         "apiKey": "SECRET",
         "priorityPages": 10,
-        "maxPages": 60
+        "maxPages": 60,
+        "numOfThreads": 4
     },
     "pricing": {
         "buffPricePercentage": 1.00,
         "minimumPrice": 1.00,
-        "targetPaymentRate": 0.97
+        "targetPaymentRate": 1.00
     }
 }

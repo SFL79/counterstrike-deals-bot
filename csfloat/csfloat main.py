@@ -23,6 +23,7 @@ skins_db_path = config["database"]["skinsDbPath"]
 
 priority_pages = config["csfloat"]["priorityPages"]
 max_pages = config["csfloat"]["maxPages"]
+num_of_threads = config["csfloat"]["numOfThreads"]
 
 buff_price_percentage = config["pricing"]["buffPricePercentage"]
 minimum_price = config["pricing"]["minimumPrice"]
@@ -121,8 +122,8 @@ def look_for_discounts(page):
                         logger.info("max pages is: ", max_pages)
 
                 price = listing["price"]
-                item = listing["item"]
-                if price / 100 > minimum_price:
+                listing_type = listing["type"]
+                if price / 100 > minimum_price and listing_type == "buy_now":
                     write_to_google_sheets(listing)
                     items_checked += 1
                     time.sleep(0.3)
@@ -135,11 +136,11 @@ def look_for_discounts(page):
 
 def get_next_page(page_num):
     if page_num != 1:
-        page_num += 5
+        page_num += num_of_threads - 1
     if page_num > max_pages:
-        page_num %= 5
+        page_num %= num_of_threads - 1
     if page_num == 0:
-        page_num = 5
+        page_num = num_of_threads - 1
     return page_num
 
 
@@ -150,7 +151,7 @@ def log_items_checked():
 def main():
     schedule.every(30).seconds.do(log_items_checked)
 
-    for i in range(1, 5):
+    for i in range(1, num_of_threads + 1):
         t1 = threading.Thread(target=look_for_discounts, args=(i,))
         t1.start()
         time.sleep(i)
