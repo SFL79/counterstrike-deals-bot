@@ -26,6 +26,7 @@ max_pages = config["csfloat"]["maxPages"]
 
 buff_price_percentage = config["pricing"]["buffPricePercentage"]
 minimum_price = config["pricing"]["minimumPrice"]
+target_payment_rate = config["pricing"]["targetPaymentRate"]
 
 COOKIES = {
     'session': cookies_path
@@ -71,14 +72,17 @@ def write_to_google_sheets(listing):
             logger.warning("item name for non buff price is " + item_name)
             return
         if buff_price * buff_price_percentage >= price:
-            # open the google spreadsheet (where 'PY to Gsheet Test' is the name of my sheet)
-            sh = json_file.open('csgofloat alerter')
+            # open the google spreadsheet
+            sh = json_file.open(google_sheet_name)
             # select the first sheet
             wks = sh[0]
             # update the first sheet with df, starting at cell B2.
             current_time = datetime.datetime.now()
             current_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
-            wks.update_row(sheet_row_index, [item_name, item_float, price, price / buff_price, current_time])
+            # calculate desired target payment. str to avoid automatic conversion to Date data type by sheets
+            target_payment = str(buff_price * target_payment_rate)
+
+            wks.update_row(sheet_row_index, [item_name, item_float, price, price / buff_price, current_time, target_payment])
             sheet_row_index += 1
             logger.info("wrote item: {} to google sheets".format(item_name))
     except Exception as e:
@@ -146,7 +150,7 @@ def log_items_checked():
 def main():
     schedule.every(30).seconds.do(log_items_checked)
 
-    for i in range(1, 4):
+    for i in range(1, 5):
         t1 = threading.Thread(target=look_for_discounts, args=(i,))
         t1.start()
         time.sleep(i)

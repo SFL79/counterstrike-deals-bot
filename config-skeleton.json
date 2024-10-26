@@ -17,6 +17,7 @@
     },
     "pricing": {
         "buffPricePercentage": 1.00,
-        "minimumPrice": 1.00
+        "minimumPrice": 1.00,
+        "targetPaymentRate": 0.97
     }
 }
