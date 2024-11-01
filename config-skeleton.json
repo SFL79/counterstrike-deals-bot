@@ -5,16 +5,17 @@
     "googleSheets": {
         "configPath": "SECRET",
         "sheetName": "SECRET",
-        "sheet_row_index": 2
+        "sheet_row_index": 0
     },
     "database": {
         "skinsDbPath": "SECRET"
     },
     "csfloat": {
         "apiKey": "SECRET",
-        "priorityPages": 10,
-        "maxPages": 60,
-        "numOfThreads": 4
+        "priorityPages": 1,
+        "maxPages": 1,
+        "numOfThreads": 1,
+        "steam_user_id": "SECRET"
     },
     "pricing": {
         "buffPricePercentage": 1.00,

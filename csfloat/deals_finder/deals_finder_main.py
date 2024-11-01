@@ -9,7 +9,7 @@ import schedule
 import buff.buff163 as buff163
 from logs.logger_setup import get_logger
 
-with open("../config.json", "r") as file:
+with open("../../config.json", "r") as file:
     config = json.load(file)
 
 # Accessing values from the JSON data
@@ -36,7 +36,7 @@ COOKIES = {
 '''google sheets related variables'''
 json_file = pygsheets.authorize(service_file=google_sheets_path)
 
-with open("../buff_ids.json", "r", encoding='utf-8') as file:
+with open("../../buff_ids.json", "r", encoding='utf-8') as file:
     buff_ids_config = json.load(file)
 
 logger = get_logger()
@@ -47,7 +47,6 @@ def get_item_details(listing):
     item_name = item_info["market_hash_name"]
     if item_name[:-1] == " ":
         item_name = item_name[:-1]
-    # item_name = item_name.replace("'", "''")
 
     item_id = buff_ids_config["items"].get(item_name, {}).get("buff163_goods_id")
     if item_id is None:
