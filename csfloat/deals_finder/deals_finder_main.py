@@ -41,6 +41,7 @@ with open("../../buff_ids.json", "r", encoding='utf-8') as file:
 
 logger = get_logger()
 
+listing_dict = {}
 
 def get_item_details(listing):
     item_info = listing["item"]
@@ -68,7 +69,11 @@ def write_to_google_sheets(listing):
     try:
         item_name, item_float, price, buff_price = get_item_details(listing)
         if buff_price is None:
-            logger.warning("item name for non buff price is " + item_name)
+            logger.warning(f"Received None buff price for item{item_name}")
+            return
+        saved_price = listing_dict.get((item_name, item_float))
+        if saved_price is not None and saved_price >= price:
+            logger.debug(f"Skipped item {item_name, item_float} as it was already written to sheets")
             return
         if buff_price * buff_price_percentage >= price:
             # open the google spreadsheet
@@ -83,6 +88,7 @@ def write_to_google_sheets(listing):
 
             wks.update_row(sheet_row_index, [item_name, item_float, price, price / buff_price, current_time, target_payment])
             sheet_row_index += 1
+            listing_dict[(item_name, item_float)] = price
             logger.info("wrote item: {} to google sheets".format(item_name))
     except Exception as e:
         logger.error(e)
