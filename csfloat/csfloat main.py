@@ -34,8 +34,7 @@ COOKIES = {
 }
 
 '''google sheets related variables'''
-json_file = pygsheets.authorize(
-    service_file=google_sheets_path)
+json_file = pygsheets.authorize(service_file=google_sheets_path)
 
 with open("../buff_ids.json", "r", encoding='utf-8') as file:
     buff_ids_config = json.load(file)
@@ -111,8 +110,7 @@ def look_for_discounts(page):
                 logger.info(int(output.headers["x-ratelimit-reset"]) - int(time.time()))
                 time.sleep(int(output.headers["x-ratelimit-reset"]) - int(time.time()))
 
-            # candidate_list = []
-            for listing in my_json:
+            for listing in my_json["data"]:
                 if "code" in listing:
                     if listing["code"] == 20:  # too many requests
                         time.sleep(100)
