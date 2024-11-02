@@ -110,7 +110,7 @@ def look_for_discounts(page):
             logger.info('https://csfloat.com/api/v1/listings?sort_by=most_recent&min_price=10000&page=%d' % page)
             my_json = output.json()
             ratelimit_remaining = output.headers["x-ratelimit-remaining"]
-            logger.info(output.status_code)
+            logger.info(f"Response header status code is: {output.status_code}")
             if int(ratelimit_remaining) < priority_pages:
                 logger.info(int(output.headers["x-ratelimit-reset"]) - int(time.time()))
                 time.sleep(int(output.headers["x-ratelimit-reset"]) - int(time.time()))

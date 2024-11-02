@@ -9,7 +9,7 @@ with open("../../config.json", "r") as file:
     config = json.load(file)
 
 user_id = config["csfloat"]["steam_user_id"]
-URL = f"https://csfloat.com/api/v1/users/{user_id}/stall?limit=40"
+URL = f"https://csfloat.com/api/v1/users/{user_id}/stall?limit=500"
 
 
 if __name__ == '__main__':
