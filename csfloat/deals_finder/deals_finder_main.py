@@ -60,16 +60,15 @@ def get_item_details(listing):
     price = listing["price"] / 100
     buff_price = buff163.get_item_buff_price(item_id)
     if buff_price is None:
-        logger.warning("received None buff request for item: " + item_name)
+        logger.warning(f"Received None buff price for item{item_name}")
     return item_name, item_float, price, buff_price
 
 
-def write_to_google_sheets(listing):
+def write_to_google_sheets(listing, page):
     global sheet_row_index
     try:
         item_name, item_float, price, buff_price = get_item_details(listing)
         if buff_price is None:
-            logger.warning(f"Received None buff price for item{item_name}")
             return
         saved_price = listing_dict.get((item_name, item_float))
         if saved_price is not None and saved_price >= price:
@@ -89,7 +88,7 @@ def write_to_google_sheets(listing):
             wks.update_row(sheet_row_index, [item_name, item_float, price, price / buff_price, current_time, target_payment])
             sheet_row_index += 1
             listing_dict[(item_name, item_float)] = price
-            logger.info("wrote item: {} to google sheets".format(item_name))
+            logger.info("wrote item: {}  from page {} to google sheets".format(item_name, page))
     except Exception as e:
         logger.error(e)
     finally:
@@ -127,7 +126,7 @@ def look_for_discounts(page):
                 price = listing["price"]
                 listing_type = listing["type"]
                 if price / 100 > minimum_price and listing_type == "buy_now":
-                    write_to_google_sheets(listing)
+                    write_to_google_sheets(listing, page)
                     items_checked += 1
                     time.sleep(0.3)
         except Exception as e:
@@ -152,6 +151,7 @@ def log_items_checked():
 
 
 def main():
+    logger.info("Starting finding deals!")
     schedule.every(30).seconds.do(log_items_checked)
 
     for i in range(1, num_of_threads + 1):
