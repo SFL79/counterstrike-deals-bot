@@ -15,8 +15,6 @@ with open("../../config.json", "r") as file:
     config = json.load(file)
 
 # Accessing values from the JSON data
-cookies_path = config["session"]["cookies"]
-
 google_sheets_path = config["googleSheets"]["configPath"]
 google_sheet_name = config["googleSheets"]["sheetName"]
 sheet_row_index = config["googleSheets"]["sheet_row_index"]
@@ -26,14 +24,11 @@ skins_db_path = config["database"]["skinsDbPath"]
 priority_pages = config["csfloat"]["priorityPages"]
 max_pages = config["csfloat"]["maxPages"]
 num_of_threads = config["csfloat"]["numOfThreads"]
+api_key = config["csfloat"]["apiKey"]
 
 buff_price_percentage = config["pricing"]["buffPricePercentage"]
 minimum_price = config["pricing"]["minimumPrice"]
 target_payment_rate = config["pricing"]["targetPaymentRate"]
-
-COOKIES = {
-    'session': cookies_path
-}
 
 '''google sheets related variables'''
 json_file = pygsheets.authorize(service_file=google_sheets_path)
@@ -102,10 +97,10 @@ def look_for_discounts(page):
     global items_checked
     while True:
         try:
-            output = requests.get(
-                'https://csfloat.com/api/v1/listings?sort_by=most_recent&min_price=10000&page=%d' % page,
-                cookies=COOKIES)
-            logger.info('https://csfloat.com/api/v1/listings?sort_by=most_recent&min_price=10000&page=%d' % page)
+            headers = {'Authorization': api_key}
+            request_url = f'https://csfloat.com/api/v1/listings?sort_by=most_recent&min_price=10000&page={page}'
+            output = requests.get(request_url, headers=headers)
+            logger.info(request_url)
             my_json = output.json()
             ratelimit_remaining = output.headers["x-ratelimit-remaining"]
             logger.info(f"Response header status code is: {output.status_code}")

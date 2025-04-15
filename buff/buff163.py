@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import time
 import urllib.request as request
@@ -9,7 +10,10 @@ import bs4 as bs
 from logger.logger_setup import get_logger
 
 logger = get_logger()
-with open("../buff_ids.json", "r", encoding='utf-8') as file:
+
+current_dir = os.path.dirname(__file__)  # the directory of buff163.py
+buff_ids_path = os.path.join(current_dir, "buff_ids.json")
+with open(buff_ids_path, "r", encoding='utf-8') as file:
     buff_ids_config = json.load(file)
 
 def get_item_buff_price(item_id: int) -> float:

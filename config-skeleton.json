@@ -1,7 +1,4 @@
 {
-    "session": {
-        "cookies": "SECRET"
-    },
     "googleSheets": {
         "configPath": "SECRET",
         "sheetName": "SECRET",
