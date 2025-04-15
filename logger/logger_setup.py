@@ -4,7 +4,7 @@ import logging
 def get_logger() -> logging.Logger:
     # Create a logger object
     logger = logging.getLogger("cs_deals_logger")
-    logger.setLevel(logging.DEBUG)  # Set the base level for all logs
+    logger.setLevel(logging.DEBUG)  # Set the base level for all logger
 
     # Create a file handler for the log file
     log_file_name = "deals_log.log"

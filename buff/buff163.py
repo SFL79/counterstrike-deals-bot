@@ -5,10 +5,12 @@ import urllib.request as request
 from urllib.error import HTTPError
 
 import bs4 as bs
-from logs.logger_setup import get_logger
+
+from logger.logger_setup import get_logger
 
 logger = get_logger()
-
+with open("../buff_ids.json", "r", encoding='utf-8') as file:
+    buff_ids_config = json.load(file)
 
 def get_item_buff_price(item_id: int) -> float:
     try:
@@ -25,6 +27,10 @@ def get_item_buff_price(item_id: int) -> float:
     except Exception as e:
         logger.warning('failed in: https://buff.163.com/goods/{}?from=market#tab=selling'.format(item_id))
         logger.error(e)
+
+def get_item_buff_price_from_name(item_name: str) -> float:
+    item_id = buff_ids_config["items"].get(item_name, {}).get("buff163_goods_id")
+    return get_item_buff_price(item_id)
 
 
 def send_request(request_url: str):

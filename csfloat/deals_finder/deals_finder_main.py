@@ -7,7 +7,9 @@ import requests
 import schedule
 
 import buff.buff163 as buff163
-from logs.logger_setup import get_logger
+from logger.logger_setup import get_logger
+from buff.buff163 import buff_ids_config
+
 
 with open("../../config.json", "r") as file:
     config = json.load(file)
@@ -35,9 +37,6 @@ COOKIES = {
 
 '''google sheets related variables'''
 json_file = pygsheets.authorize(service_file=google_sheets_path)
-
-with open("../../buff_ids.json", "r", encoding='utf-8') as file:
-    buff_ids_config = json.load(file)
 
 logger = get_logger()
 
