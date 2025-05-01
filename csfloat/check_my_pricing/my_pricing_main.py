@@ -17,8 +17,17 @@ if __name__ == '__main__':
     my_json = output.json()
     for listing in my_json["data"]:
         listing_data = deals_finder_main.get_item_details(listing)
-        csfloat_minus_buff_price = listing_data[2] - listing_data[3]
-        over_under_buff_percentage = round(csfloat_minus_buff_price / listing_data[3] * 100, 2)
-        if over_under_buff_percentage < 0:
-            print(f"{listing_data[0:2]}. {over_under_buff_percentage}% under buff. buff price is {listing_data[3]}")
+
+        csfloat_price = listing_data[2]
+        buff_price = listing_data[3]
+
+        csfloat_minus_buff_price = csfloat_price - buff_price
+
+        if buff_price > 0:
+            over_under_buff_percentage = round(csfloat_minus_buff_price / buff_price * 100, 2)
+            if over_under_buff_percentage < 0:
+                print(f"{listing_data[0:2]}. {over_under_buff_percentage}% under buff. buff price is {buff_price}")
+        else:
+            print(f'listing {listing} has invalid buff price {buff_price}')
+
 
